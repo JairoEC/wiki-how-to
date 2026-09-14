@@ -325,17 +325,6 @@ firewall-cmd --permanent --zone=trusted --add-interface=tunl0
 
 > Calico usa `tun10` para encapsular paquetes cuando un Pod en un nodo necesita comunicarse con un Pod de otro nodo
 
-```
-firewall-cmd --permanent --zone=trusted --add-source=172.17.0.0/16
-```
-
-> Bloque de ips que Kubernetes reserva para asignar Pods.
-
-```
-firewall-cmd --permanent --zone=trusted --add-source=10.96.0.0/12
-```
-
-> Envoy proxy se comunica atraves de su propio DNS o IP de sevicio.
 
 ```
 firewall-cmd --reload
