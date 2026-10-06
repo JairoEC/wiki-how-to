@@ -6,7 +6,7 @@
 1. Instalación del CDR :
 
 ```bash
-kubectl kustomize "https://github.com/nginx/nginx-gateway-fabric/config/crd/gateway-api/standard?ref=v2.7.2" | kubectl apply -f -
+kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/nginx/nginx-gateway-fabric/v2.7.2/deploy/crds.yaml
 ```
 
 2. Deberás de crear un namespace `nginx-gateway`, el cuál será usasdo por los manifiestos por defecto
@@ -33,12 +33,13 @@ kubectl get pods -n nginx-gateway
 
 1. Creación del gateway class
 
+  Solo si se necesita craer el recurso. Al instalar gateway, el recurso se crea
+
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
     name: nginx-gateway-class # nombre de ejemplo
-    namespace: public
 spec:
     controllerName: gateway.nginx.org/gateway-controller # Nombre de ejemplo
 ```
