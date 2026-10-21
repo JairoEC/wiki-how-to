@@ -4,9 +4,9 @@
 - CPU   : 2vCPU
 - RAM   : 3GB
 - SSD   : 32GB
-- K8S   : v1.31
-- CRI-O : v1.31
-- CILIUM: v1.19
+- K8S   : v1.37
+- CRI-O : v1.37
+- CILIUM: v1.20
 otras aplicaciones:
 - apt-transport-https
 - ca-certificates
@@ -142,6 +142,7 @@ Aqui se instalan algunos
 ```
 # Programas utiles para descargar dependencias de forma segura
 apt-get install apt-transport-https ca-certificates curl gpg -y
+#apt-get install -y software-properties-common curl
 # Crear una carpeta con permisos para usuario root y para los demas rw
 mkdir -p -m 755 /etc/apt/keyrings
 ```
@@ -151,17 +152,17 @@ mkdir -p -m 755 /etc/apt/keyrings
 
 > Recordar que la version de CRI-O y la version de K8s deben de ser la misma, por lo cual nos aseguramos de instlar las mismas versiones para no incurrir en conflicto de versiones. Para ello usamos una variable local.
 ```
-K8S_VERSION=v1.31
+KUBERNETES_VERSION=v1.37
+CRIO_VERSION=v1.37
 ```
 
 3. Descargar llave GPG y agregar repositorio de PKGS.K8S.IO
 ```
-curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/stable:/$K8S_VERSION/deb/Release.key \
-| sudo gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key |
+    gpg --batch --yes --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
 
-echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] \
-https://pkgs.k8s.io/addons:/cri-o:/stable:/$K8S_VERSION/deb/ /" \
-| sudo tee /etc/apt/sources.list.d/cri-o.list
+echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/ /" |
+    tee /etc/apt/sources.list.d/cri-o.list
 ```
 
 4. Cargar depedendencias
@@ -184,29 +185,14 @@ ls -l /var/run/crio/crio.sock
 ```
 
 #### INSTALAR CONTRACK
-Elegir una forma
-**(OPCIONAL - CON CONTRACK)**
+
 6. Paquete que le ayuda a kubernetes buscar el paquete de crio
 
 ```
 apt-get install -y conntrack
 ```
-7. Indicar a kubeadm usar CRI-O **(NO SEGUIR)**
-```
-sudo kubeadm init --cri-socket unix:///var/run/crio/crio.sock
-```
 
-**(OPCIONAL - SIN CONTRACK)**
-6. Confiugrar y modificar el archivo por defecto crictl:
 
-```
-cat <<EOF | sudo tee /etc/crictl.yaml
-runtime-endpoint: unix:///var/run/crio/crio.sock
-image-endpoint: unix:///var/run/crio/crio.sock
-timeout: 10
-debug: false
-EOF
-```
 7. Asegurar que CRI-O está encendido antes del init
 ```
 sudo systemctl restart crio
@@ -217,20 +203,21 @@ sudo systemctl restart crio
 
 1. Agregar el repositorio de kubernetes
 ```
-curl -fsSL https://pkgs.k8s.io/core:/stable:/$K8S_VERSION/deb/Release.key \
-| sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key |
+    gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] \
-https://pkgs.k8s.io/core:/stable:/$K8S_VERSION/deb/ /" \
-| sudo tee /etc/apt/sources.list.d/kubernetes.list
-
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" |
+    tee /etc/apt/sources.list.d/kubernetes.list
+```
+Preparar la instalacion de las dependencias de kubernetes
+```
 apt-get update
 ```
 2. Instalar kubelet, kubeadm y kubectl
 ```
 apt-get install -y kubelet kubeadm kubectl
 ```
-3. Fijar/congelar la version
+3. Fijar/congelar la version (opcional)
 ```
 apt-mark hold kubelet kubeadm kubectl
 ```
@@ -287,8 +274,9 @@ kubectl get nodes
 
 ## INSTALAR CILIUM 
 ***Cilium se instala desde el master y desde aquí Cilium se despliega mediante un pod en cada nodo worker***
+link fuente | https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/#install-cilium
 
-1. Descargar la dependencia oficial de Cilium
+1. Instalar el CLI oficial de Cilium en su version latestS
 ```
 CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
 CLI_ARCH=amd64
