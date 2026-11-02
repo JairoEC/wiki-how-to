@@ -155,7 +155,7 @@ mkdir -p -m 755 /etc/apt/keyrings
 KUBERNETES_VERSION=v1.37
 CRIO_VERSION=v1.37
 ```
-
+link | https://github.com/cri-o/packaging?tab=readme-ov-file#stable-versions
 3. Descargar llave GPG y agregar repositorio de PKGS.K8S.IO
 ```
 curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key |
